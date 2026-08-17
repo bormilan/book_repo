@@ -10,6 +10,55 @@ struct BookMetadata: Equatable {
     let descriptionText: String?
 }
 
+enum ScannedBookImportResult {
+    case imported(Book)
+    case manualEntry(isbn: String)
+
+    var fallbackISBN: String? {
+        guard case let .manualEntry(isbn) = self else { return nil }
+        return isbn
+    }
+}
+
+@MainActor
+struct ScannedBookImporter {
+    typealias Lookup = (String) async throws -> BookMetadata?
+
+    private let repository: BookRepository
+    private let lookup: Lookup
+
+    init(
+        repository: BookRepository,
+        lookup: @escaping Lookup = { isbn in
+            try await OpenLibraryClient().lookup(isbn: isbn)
+        }
+    ) {
+        self.repository = repository
+        self.lookup = lookup
+    }
+
+    func importBook(isbn: String) async -> ScannedBookImportResult {
+        do {
+            guard let metadata = try await lookup(isbn) else {
+                return .manualEntry(isbn: isbn)
+            }
+
+            let book = try repository.create(
+                title: metadata.title,
+                authors: metadata.authors,
+                isbn: metadata.isbn,
+                publisher: metadata.publisher,
+                publicationDate: metadata.publicationDate,
+                language: metadata.language,
+                descriptionText: metadata.descriptionText
+            )
+            return .imported(book)
+        } catch {
+            return .manualEntry(isbn: isbn)
+        }
+    }
+}
+
 struct OpenLibraryClient {
     private let session: URLSession
     private let userAgent: String
@@ -34,7 +83,7 @@ struct OpenLibraryClient {
                 isbn: isbn,
                 publisher: book.publishers?.first?.name,
                 publicationDate: PublicationDateParser.date(from: book.publishDate),
-                language: book.languages?.first?.key,
+                language: book.languages?.first?.key.split(separator: "/").last.map(String.init),
                 descriptionText: book.description?.text
             )
         }

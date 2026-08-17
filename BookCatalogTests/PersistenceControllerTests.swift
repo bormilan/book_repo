@@ -61,8 +61,8 @@ final class PersistenceControllerTests: XCTestCase {
             "9780807083697"
         )
         XCTAssertEqual(
-            ISBNBarcodeValidator.isbn(from: "9791234567890"),
-            "9791234567890"
+            ISBNBarcodeValidator.isbn(from: "9791234567896"),
+            "9791234567896"
         )
     }
 
@@ -107,6 +107,94 @@ final class PersistenceControllerTests: XCTestCase {
         let result = try await client.lookup(isbn: "9789999999991")
 
         XCTAssertNil(result)
+    }
+
+    func testOpenLibraryLookupDecodesAllSupportedMetadata() async throws {
+        MockURLProtocol.responseData = Data(
+            #"""
+            {
+              "ISBN:9780061054884": {
+                "title": "The Dispossessed",
+                "authors": [{"name": "Ursula K. Le Guin"}],
+                "publishers": [{"name": "Harper & Row"}],
+                "publish_date": "1974-05-01",
+                "languages": [{"key": "/languages/eng"}],
+                "description": {"text": "An ambiguous utopia."}
+              }
+            }
+            """#.utf8
+        )
+        let client = makeOpenLibraryClient()
+
+        let result = try await client.lookup(isbn: "9780061054884")
+
+        XCTAssertEqual(result?.title, "The Dispossessed")
+        XCTAssertEqual(result?.authors, "Ursula K. Le Guin")
+        XCTAssertEqual(result?.isbn, "9780061054884")
+        XCTAssertEqual(result?.publisher, "Harper & Row")
+        XCTAssertEqual(result?.language, "eng")
+        XCTAssertEqual(result?.descriptionText, "An ambiguous utopia.")
+        XCTAssertNotNil(result?.publicationDate)
+    }
+
+    @MainActor
+    func testScanImportSavesTheFirstReturnedBookAutomatically() async throws {
+        let container = try PersistenceController.makeModelContainer(isStoredInMemoryOnly: true)
+        let repository = BookRepository(modelContext: container.mainContext)
+        let importer = ScannedBookImporter(repository: repository) { isbn in
+            BookMetadata(
+                title: "Kindred",
+                authors: "Octavia E. Butler",
+                isbn: isbn,
+                publisher: "Doubleday",
+                publicationDate: nil,
+                language: "eng",
+                descriptionText: "A novel."
+            )
+        }
+
+        let result = await importer.importBook(isbn: "9780807083697")
+
+        guard case let .imported(book) = result else {
+            return XCTFail("Expected the first lookup result to be imported")
+        }
+        XCTAssertIdentical(try repository.fetchAll().first, book)
+        XCTAssertEqual(book.title, "Kindred")
+    }
+
+    @MainActor
+    func testScanImportFallsBackToManualEntryForEmptyAndFailedLookups() async throws {
+        let container = try PersistenceController.makeModelContainer(isStoredInMemoryOnly: true)
+        let repository = BookRepository(modelContext: container.mainContext)
+        let emptyImporter = ScannedBookImporter(repository: repository) { _ in nil }
+        let failedImporter = ScannedBookImporter(repository: repository) { _ in
+            throw URLError(.notConnectedToInternet)
+        }
+
+        let emptyResult = await emptyImporter.importBook(isbn: "9780807083697")
+        let failedResult = await failedImporter.importBook(isbn: "9780807083697")
+
+        XCTAssertEqual(emptyResult.fallbackISBN, "9780807083697")
+        XCTAssertEqual(failedResult.fallbackISBN, "9780807083697")
+        XCTAssertTrue(try repository.fetchAll().isEmpty)
+    }
+
+    @MainActor
+    func testImportFeedbackNamesTheTitleAndSourceAndSupportsViewAndUndo() throws {
+        let container = try PersistenceController.makeModelContainer(isStoredInMemoryOnly: true)
+        let repository = BookRepository(modelContext: container.mainContext)
+        let book = try repository.create(title: "Kindred", isbn: "9780807083697")
+        var feedback = ImportFeedbackState(importedBook: book)
+
+        XCTAssertEqual(feedback.message, "Kindred was added from Open Library.")
+
+        feedback.viewImportedBook()
+        XCTAssertIdentical(feedback.selectedBook, book)
+
+        try feedback.undo(using: repository)
+        XCTAssertNil(feedback.importedBook)
+        XCTAssertNil(feedback.selectedBook)
+        XCTAssertTrue(try repository.fetchAll().isEmpty)
     }
 
     @MainActor
@@ -178,6 +266,15 @@ final class PersistenceControllerTests: XCTestCase {
 
         XCTAssertEqual(try reopenedRepository.fetchAll().map(\.title), ["A Wizard of Earthsea"])
     }
+}
+
+private func makeOpenLibraryClient() -> OpenLibraryClient {
+    let configuration = URLSessionConfiguration.ephemeral
+    configuration.protocolClasses = [MockURLProtocol.self]
+    return OpenLibraryClient(
+        session: URLSession(configuration: configuration),
+        userAgent: "BookCatalogTests/1.0"
+    )
 }
 
 private final class MockURLProtocol: URLProtocol {
