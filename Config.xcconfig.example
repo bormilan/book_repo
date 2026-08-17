@@ -1,3 +1,4 @@
-// Copy this file to Config.xcconfig and replace the placeholder before release.
-// Config.xcconfig is intentionally ignored by Git.
+// Copy this file to Config.xcconfig and replace the placeholder.
+// Config.xcconfig is intentionally ignored by Git and overrides this setting
+// for Debug and Release builds after running `xcodegen generate`.
 OPEN_LIBRARY_USER_AGENT = BookCatalog/0.0.1 (contact: your-email@example.com)
