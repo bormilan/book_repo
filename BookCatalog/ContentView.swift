@@ -2,9 +2,13 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
+    @Environment(\.modelContext) private var modelContext
     @Query(sort: \Book.title, order: .forward) private var books: [Book]
-    @State private var unavailableFeature: UnavailableFeature?
     @State private var showsManualEntry = false
+    @State private var showsScanner = false
+    @State private var selectedBook: Book?
+    @State private var manualEntryISBN: String?
+    @State private var isLookingUpISBN = false
 
     var body: some View {
         NavigationStack {
@@ -28,10 +32,17 @@ struct ContentView: View {
                 }
             }
             .navigationTitle("My Books")
+            .overlay {
+                if isLookingUpISBN {
+                    ProgressView("Looking up book…")
+                        .padding()
+                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button("Scan book", systemImage: "barcode.viewfinder") {
-                        unavailableFeature = .scanner
+                        showsScanner = true
                     }
                 }
                 ToolbarItem(placement: .secondaryAction) {
@@ -40,17 +51,20 @@ struct ContentView: View {
                     }
                 }
             }
-            .alert(item: $unavailableFeature) { feature in
-                Alert(
-                    title: Text("Coming soon"),
-                    message: Text(feature.message),
-                    dismissButton: .default(Text("OK"))
-                )
-            }
             .sheet(isPresented: $showsManualEntry) {
                 NavigationStack {
-                    ManualBookForm()
+                    ManualBookForm(prefilledISBN: manualEntryISBN)
                 }
+            }
+            .sheet(isPresented: $showsScanner) {
+                NavigationStack {
+                    BarcodeScannerView { isbn in
+                        handleScannedISBN(isbn)
+                    }
+                }
+            }
+            .navigationDestination(item: $selectedBook) { book in
+                BookDetailView(book: book)
             }
         }
     }
@@ -58,7 +72,7 @@ struct ContentView: View {
     private var collectionActions: some View {
         VStack(spacing: 12) {
             Button("Scan book", systemImage: "barcode.viewfinder") {
-                unavailableFeature = .scanner
+                showsScanner = true
             }
             .buttonStyle(.borderedProminent)
 
@@ -67,6 +81,43 @@ struct ContentView: View {
             }
             .buttonStyle(.bordered)
         }
+    }
+
+    private func handleScannedISBN(_ isbn: String) {
+        let repository = BookRepository(modelContext: modelContext)
+        showsScanner = false
+
+        if let existingBook = try? repository.book(withISBN: isbn) {
+            selectedBook = existingBook
+        } else {
+            isLookingUpISBN = true
+            Task {
+                defer { isLookingUpISBN = false }
+                do {
+                    guard let metadata = try await OpenLibraryClient().lookup(isbn: isbn) else {
+                        openManualEntry(with: isbn)
+                        return
+                    }
+
+                    _ = try repository.create(
+                        title: metadata.title,
+                        authors: metadata.authors,
+                        isbn: metadata.isbn,
+                        publisher: metadata.publisher,
+                        publicationDate: metadata.publicationDate,
+                        language: metadata.language,
+                        descriptionText: metadata.descriptionText
+                    )
+                } catch {
+                    openManualEntry(with: isbn)
+                }
+            }
+        }
+    }
+
+    private func openManualEntry(with isbn: String) {
+        manualEntryISBN = isbn
+        showsManualEntry = true
     }
 }
 
@@ -82,19 +133,6 @@ private struct BookRow: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
-        }
-    }
-}
-
-private enum UnavailableFeature: String, Identifiable {
-    case scanner
-
-    var id: String { rawValue }
-
-    var message: String {
-        switch self {
-        case .scanner:
-            "Barcode scanning will be available in a later step."
         }
     }
 }

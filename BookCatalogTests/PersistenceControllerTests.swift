@@ -55,6 +55,60 @@ final class PersistenceControllerTests: XCTestCase {
         XCTAssertEqual(draft.isbn, "978-0-8070-8369-7")
     }
 
+    func testAcceptsISBN13BookBarcodes() {
+        XCTAssertEqual(
+            ISBNBarcodeValidator.isbn(from: "9780807083697"),
+            "9780807083697"
+        )
+        XCTAssertEqual(
+            ISBNBarcodeValidator.isbn(from: "9791234567890"),
+            "9791234567890"
+        )
+    }
+
+    func testValidatesISBN10AndISBN13CheckDigits() {
+        XCTAssertTrue(ISBNValidator.isValid("0-306-40615-2"))
+        XCTAssertTrue(ISBNValidator.isValid("978-0-306-40615-7"))
+        XCTAssertFalse(ISBNValidator.isValid("978-0-306-40615-8"))
+        XCTAssertFalse(ISBNValidator.isValid("0-306-40615-3"))
+    }
+
+    func testTreatsAnEmptyOptionalISBNAsValid() {
+        XCTAssertTrue(ISBNValidator.isValidOptional(""))
+        XCTAssertTrue(ISBNValidator.isValidOptional("   "))
+    }
+
+    func testRejectsUnsupportedOrMalformedBarcodes() {
+        XCTAssertNil(ISBNBarcodeValidator.isbn(from: "0123456789012"))
+        XCTAssertNil(ISBNBarcodeValidator.isbn(from: "978080708369"))
+        XCTAssertNil(ISBNBarcodeValidator.isbn(from: "978080708369X"))
+        XCTAssertNil(ISBNBarcodeValidator.isbn(from: "9780807083697X"))
+    }
+
+    func testOpenLibraryRequestUsesIdentifyingUserAgent() throws {
+        let request = try OpenLibraryClient.makeRequest(
+            isbn: "9780807083697",
+            userAgent: "BookCatalog/0.0.1 (contact: test@example.com)"
+        )
+
+        XCTAssertEqual(request.url?.host, "openlibrary.org")
+        XCTAssertEqual(request.value(forHTTPHeaderField: "User-Agent"), "BookCatalog/0.0.1 (contact: test@example.com)")
+    }
+
+    func testOpenLibraryLookupReturnsNilForNoMatchingBook() async throws {
+        MockURLProtocol.responseData = Data("{}".utf8)
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [MockURLProtocol.self]
+        let client = OpenLibraryClient(
+            session: URLSession(configuration: configuration),
+            userAgent: "BookCatalogTests/1.0"
+        )
+
+        let result = try await client.lookup(isbn: "9789999999991")
+
+        XCTAssertNil(result)
+    }
+
     @MainActor
     func testRejectsDuplicateNonEmptyISBNs() throws {
         let container = try PersistenceController.makeModelContainer(isStoredInMemoryOnly: true)
@@ -124,4 +178,22 @@ final class PersistenceControllerTests: XCTestCase {
 
         XCTAssertEqual(try reopenedRepository.fetchAll().map(\.title), ["A Wizard of Earthsea"])
     }
+}
+
+private final class MockURLProtocol: URLProtocol {
+    static var responseData = Data()
+
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+
+    override func startLoading() {
+        let response = HTTPURLResponse(
+            url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil
+        )!
+        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+        client?.urlProtocol(self, didLoad: Self.responseData)
+        client?.urlProtocolDidFinishLoading(self)
+    }
+
+    override func stopLoading() {}
 }

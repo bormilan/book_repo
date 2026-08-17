@@ -54,9 +54,11 @@ struct BookRepository {
         try modelContext.save()
     }
 
-    private func book(withISBN isbn: String) throws -> Book? {
+    func book(withISBN isbn: String) throws -> Book? {
+        guard let normalizedISBN = Book.normalizedISBN(isbn) else { return nil }
+
         let predicate = #Predicate<Book> { book in
-            book.isbn == isbn
+            book.isbn == normalizedISBN
         }
         var descriptor = FetchDescriptor<Book>(predicate: predicate)
         descriptor.fetchLimit = 1
