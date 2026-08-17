@@ -37,6 +37,24 @@ final class PersistenceControllerTests: XCTestCase {
         )
     }
 
+    func testManualBookDraftRequiresANonEmptyTitle() {
+        var draft = ManualBookDraft()
+
+        XCTAssertFalse(draft.canSave)
+
+        draft.title = "   "
+        XCTAssertFalse(draft.canSave)
+
+        draft.title = "Kindred"
+        XCTAssertTrue(draft.canSave)
+    }
+
+    func testManualBookDraftKeepsAPrefilledISBN() {
+        let draft = ManualBookDraft(prefilledISBN: "978-0-8070-8369-7")
+
+        XCTAssertEqual(draft.isbn, "978-0-8070-8369-7")
+    }
+
     @MainActor
     func testRejectsDuplicateNonEmptyISBNs() throws {
         let container = try PersistenceController.makeModelContainer(isStoredInMemoryOnly: true)
