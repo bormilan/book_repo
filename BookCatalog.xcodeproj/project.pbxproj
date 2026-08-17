@@ -10,6 +10,7 @@
 		01363639A8C61A6DE2C6E153 /* BookCatalogApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59B1A56B2C570397AE858FF0 /* BookCatalogApp.swift */; };
 		16F2938C64CB7C624108EAA9 /* Book.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A8DFEC67B2675C5B333366F /* Book.swift */; };
 		5502408E3C97C9DC4938D36B /* OpenLibraryConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 846616297C73F790A70B3C68 /* OpenLibraryConfiguration.swift */; };
+		598C4EED71D9AA038F6DA452 /* BookDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB40C1124CD858D17CD69EDC /* BookDetailView.swift */; };
 		5D6698BEA15FB20CEC78AE3E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63E2AE5096B9C7F35119F42A /* ContentView.swift */; };
 		B02C5B9C8B7A5344CB2D91F8 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1721EE9E3C52BD186B64DB2 /* PersistenceController.swift */; };
 		D2E96662670536710A258182 /* PersistenceControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D3DA87EDB5FE10FB58DBD68 /* PersistenceControllerTests.swift */; };
@@ -36,6 +37,7 @@
 		B2AD16ECEE36458637D08D23 /* BookRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookRepository.swift; sourceTree = "<group>"; };
 		EA307704BED0404DD13203DE /* BookCatalogTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = BookCatalogTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F1721EE9E3C52BD186B64DB2 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
+		FB40C1124CD858D17CD69EDC /* BookDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookDetailView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -61,6 +63,7 @@
 			children = (
 				4A8DFEC67B2675C5B333366F /* Book.swift */,
 				59B1A56B2C570397AE858FF0 /* BookCatalogApp.swift */,
+				FB40C1124CD858D17CD69EDC /* BookDetailView.swift */,
 				B2AD16ECEE36458637D08D23 /* BookRepository.swift */,
 				63E2AE5096B9C7F35119F42A /* ContentView.swift */,
 				846616297C73F790A70B3C68 /* OpenLibraryConfiguration.swift */,
@@ -162,6 +165,7 @@
 			files = (
 				16F2938C64CB7C624108EAA9 /* Book.swift in Sources */,
 				01363639A8C61A6DE2C6E153 /* BookCatalogApp.swift in Sources */,
+				598C4EED71D9AA038F6DA452 /* BookDetailView.swift in Sources */,
 				E86DB8E49D310845FC57CC21 /* BookRepository.swift in Sources */,
 				5D6698BEA15FB20CEC78AE3E /* ContentView.swift in Sources */,
 				5502408E3C97C9DC4938D36B /* OpenLibraryConfiguration.swift in Sources */,
