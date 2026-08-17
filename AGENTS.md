@@ -13,7 +13,9 @@ Follow these rules for every implementation task in this repository.
 4. Open a pull request when the task is complete. Include the issue ID in the
    pull-request title and write a brief, descriptive summary explaining why
    the changes solve the issue.
-5. Update the applicable implementation-task checklist only after the task and
+5. After the pull request is merged, close the related issue and delete the
+   feature branch from the remote repository.
+6. Update the applicable implementation-task checklist only after the task and
    its tests are complete.
 
 ## Decisions and questions
@@ -43,4 +45,5 @@ Each diary note must record:
 
 A task is done only when its behavior is implemented, relevant tests pass, the
 implementation checklist is updated, the implementation diary note exists,
-and a pull request has been opened.
+the pull request has been merged, the related issue has been closed, and the
+feature branch has been deleted from the remote repository.
