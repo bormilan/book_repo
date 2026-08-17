@@ -6,7 +6,7 @@ struct ContentView: View {
     @Query(sort: \Book.title, order: .forward) private var books: [Book]
     @State private var showsManualEntry = false
     @State private var showsScanner = false
-    @State private var selectedBook: Book?
+    @State private var importFeedback = ImportFeedbackState()
     @State private var manualEntryISBN: String?
     @State private var isLookingUpISBN = false
 
@@ -63,10 +63,43 @@ struct ContentView: View {
                     }
                 }
             }
-            .navigationDestination(item: $selectedBook) { book in
+            .safeAreaInset(edge: .bottom) {
+                if importFeedback.importedBook != nil {
+                    importConfirmation
+                }
+            }
+            .task(id: importFeedback.importedBook?.persistentModelID) {
+                guard let importedBook = importFeedback.importedBook else { return }
+                try? await Task.sleep(for: .seconds(10))
+                guard !Task.isCancelled, importFeedback.importedBook === importedBook else { return }
+                importFeedback.importedBook = nil
+            }
+            .navigationDestination(item: $importFeedback.selectedBook) { book in
                 BookDetailView(book: book)
             }
         }
+    }
+
+    private var importConfirmation: some View {
+        HStack(spacing: 12) {
+            Text(importFeedback.message ?? "Book added from Open Library.")
+                .font(.subheadline)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Button("View") {
+                importFeedback.viewImportedBook()
+            }
+            .fontWeight(.semibold)
+
+            Button("Undo", role: .destructive) {
+                let repository = BookRepository(modelContext: modelContext)
+                try? importFeedback.undo(using: repository)
+            }
+            .fontWeight(.semibold)
+        }
+        .padding()
+        .background(.regularMaterial)
+        .accessibilityElement(children: .contain)
     }
 
     private var collectionActions: some View {
@@ -88,28 +121,17 @@ struct ContentView: View {
         showsScanner = false
 
         if let existingBook = try? repository.book(withISBN: isbn) {
-            selectedBook = existingBook
+            importFeedback.selectedBook = existingBook
         } else {
             isLookingUpISBN = true
             Task {
                 defer { isLookingUpISBN = false }
-                do {
-                    guard let metadata = try await OpenLibraryClient().lookup(isbn: isbn) else {
-                        openManualEntry(with: isbn)
-                        return
-                    }
-
-                    _ = try repository.create(
-                        title: metadata.title,
-                        authors: metadata.authors,
-                        isbn: metadata.isbn,
-                        publisher: metadata.publisher,
-                        publicationDate: metadata.publicationDate,
-                        language: metadata.language,
-                        descriptionText: metadata.descriptionText
-                    )
-                } catch {
-                    openManualEntry(with: isbn)
+                let importer = ScannedBookImporter(repository: repository)
+                switch await importer.importBook(isbn: isbn) {
+                case let .imported(book):
+                    importFeedback.importedBook = book
+                case let .manualEntry(fallbackISBN):
+                    openManualEntry(with: fallbackISBN)
                 }
             }
         }
@@ -118,6 +140,32 @@ struct ContentView: View {
     private func openManualEntry(with isbn: String) {
         manualEntryISBN = isbn
         showsManualEntry = true
+    }
+}
+
+struct ImportFeedbackState {
+    var importedBook: Book?
+    var selectedBook: Book?
+
+    init(importedBook: Book? = nil, selectedBook: Book? = nil) {
+        self.importedBook = importedBook
+        self.selectedBook = selectedBook
+    }
+
+    var message: String? {
+        importedBook.map { "\($0.title) was added from Open Library." }
+    }
+
+    mutating func viewImportedBook() {
+        selectedBook = importedBook
+    }
+
+    @MainActor
+    mutating func undo(using repository: BookRepository) throws {
+        guard let importedBook else { return }
+        try repository.delete(importedBook)
+        self.importedBook = nil
+        selectedBook = nil
     }
 }
 
