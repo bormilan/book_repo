@@ -16,6 +16,14 @@ struct ManualBookDraft {
 
     var canSave: Bool {
         !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && ISBNValidator.isValidOptional(isbn)
+    }
+
+    var isbnValidationMessage: String? {
+        let value = isbn.trimmingCharacters(in: .whitespacesAndNewlines)
+        return value.isEmpty || ISBNValidator.isValid(value)
+            ? nil
+            : "Enter a valid ISBN-10 or ISBN-13, or leave this field empty."
     }
 
     var optionalPublicationDate: Date? {

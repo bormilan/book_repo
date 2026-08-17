@@ -66,6 +66,18 @@ final class PersistenceControllerTests: XCTestCase {
         )
     }
 
+    func testValidatesISBN10AndISBN13CheckDigits() {
+        XCTAssertTrue(ISBNValidator.isValid("0-306-40615-2"))
+        XCTAssertTrue(ISBNValidator.isValid("978-0-306-40615-7"))
+        XCTAssertFalse(ISBNValidator.isValid("978-0-306-40615-8"))
+        XCTAssertFalse(ISBNValidator.isValid("0-306-40615-3"))
+    }
+
+    func testTreatsAnEmptyOptionalISBNAsValid() {
+        XCTAssertTrue(ISBNValidator.isValidOptional(""))
+        XCTAssertTrue(ISBNValidator.isValidOptional("   "))
+    }
+
     func testRejectsUnsupportedOrMalformedBarcodes() {
         XCTAssertNil(ISBNBarcodeValidator.isbn(from: "0123456789012"))
         XCTAssertNil(ISBNBarcodeValidator.isbn(from: "978080708369"))
