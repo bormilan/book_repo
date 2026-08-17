@@ -55,6 +55,24 @@ final class PersistenceControllerTests: XCTestCase {
         XCTAssertEqual(draft.isbn, "978-0-8070-8369-7")
     }
 
+    func testAcceptsISBN13BookBarcodes() {
+        XCTAssertEqual(
+            ISBNBarcodeValidator.isbn(from: "9780807083697"),
+            "9780807083697"
+        )
+        XCTAssertEqual(
+            ISBNBarcodeValidator.isbn(from: "9791234567890"),
+            "9791234567890"
+        )
+    }
+
+    func testRejectsUnsupportedOrMalformedBarcodes() {
+        XCTAssertNil(ISBNBarcodeValidator.isbn(from: "0123456789012"))
+        XCTAssertNil(ISBNBarcodeValidator.isbn(from: "978080708369"))
+        XCTAssertNil(ISBNBarcodeValidator.isbn(from: "978080708369X"))
+        XCTAssertNil(ISBNBarcodeValidator.isbn(from: "9780807083697X"))
+    }
+
     @MainActor
     func testRejectsDuplicateNonEmptyISBNs() throws {
         let container = try PersistenceController.makeModelContainer(isStoredInMemoryOnly: true)

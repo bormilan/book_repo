@@ -19,6 +19,7 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_CFBundleDisplayName: Book Catalog
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_NSCameraUsageDescription: "Book Catalog uses the camera to scan ISBN barcodes."
         INFOPLIST_KEY_OpenLibraryUserAgent: "$(OPEN_LIBRARY_USER_AGENT)"
     scheme:
       testTargets:
