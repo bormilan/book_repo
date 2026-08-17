@@ -83,6 +83,20 @@ final class PersistenceControllerTests: XCTestCase {
         XCTAssertEqual(request.value(forHTTPHeaderField: "User-Agent"), "BookCatalog/0.0.1 (contact: test@example.com)")
     }
 
+    func testOpenLibraryLookupReturnsNilForNoMatchingBook() async throws {
+        MockURLProtocol.responseData = Data("{}".utf8)
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [MockURLProtocol.self]
+        let client = OpenLibraryClient(
+            session: URLSession(configuration: configuration),
+            userAgent: "BookCatalogTests/1.0"
+        )
+
+        let result = try await client.lookup(isbn: "9789999999991")
+
+        XCTAssertNil(result)
+    }
+
     @MainActor
     func testRejectsDuplicateNonEmptyISBNs() throws {
         let container = try PersistenceController.makeModelContainer(isStoredInMemoryOnly: true)
@@ -152,4 +166,22 @@ final class PersistenceControllerTests: XCTestCase {
 
         XCTAssertEqual(try reopenedRepository.fetchAll().map(\.title), ["A Wizard of Earthsea"])
     }
+}
+
+private final class MockURLProtocol: URLProtocol {
+    static var responseData = Data()
+
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+
+    override func startLoading() {
+        let response = HTTPURLResponse(
+            url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil
+        )!
+        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+        client?.urlProtocol(self, didLoad: Self.responseData)
+        client?.urlProtocolDidFinishLoading(self)
+    }
+
+    override func stopLoading() {}
 }
