@@ -23,6 +23,21 @@ final class PersistenceControllerTests: XCTestCase {
     }
 
     @MainActor
+    func testFetchesBooksInAscendingTitleOrder() throws {
+        let container = try PersistenceController.makeModelContainer(isStoredInMemoryOnly: true)
+        let repository = BookRepository(modelContext: container.mainContext)
+
+        _ = try repository.create(title: "Zoo")
+        _ = try repository.create(title: "A Wizard of Earthsea")
+        _ = try repository.create(title: "Dune")
+
+        XCTAssertEqual(
+            try repository.fetchAll().map(\.title),
+            ["A Wizard of Earthsea", "Dune", "Zoo"]
+        )
+    }
+
+    @MainActor
     func testRejectsDuplicateNonEmptyISBNs() throws {
         let container = try PersistenceController.makeModelContainer(isStoredInMemoryOnly: true)
         let repository = BookRepository(modelContext: container.mainContext)

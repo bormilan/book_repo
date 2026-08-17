@@ -43,7 +43,10 @@ struct BookRepository {
     }
 
     func fetchAll() throws -> [Book] {
-        try modelContext.fetch(FetchDescriptor<Book>())
+        let descriptor = FetchDescriptor<Book>(
+            sortBy: [SortDescriptor(\Book.title, order: .forward)]
+        )
+        return try modelContext.fetch(descriptor)
     }
 
     func delete(_ book: Book) throws {
