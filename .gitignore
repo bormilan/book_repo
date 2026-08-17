@@ -1,0 +1,13 @@
+# macOS and Obsidian workspace files
+.DS_Store
+.obsidian/
+
+# Xcode user data and build products
+DerivedData/
+build/
+*.xcuserstate
+xcuserdata/
+
+# Local configuration and secrets
+*.xcconfig
+!Config.xcconfig.example

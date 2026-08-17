@@ -1,0 +1,3 @@
+// Copy this file to Config.xcconfig and replace the placeholder before release.
+// Config.xcconfig is intentionally ignored by Git.
+OPEN_LIBRARY_USER_AGENT = BookCatalog/0.0.1 (contact: your-email@example.com)
