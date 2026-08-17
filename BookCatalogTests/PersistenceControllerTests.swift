@@ -73,6 +73,16 @@ final class PersistenceControllerTests: XCTestCase {
         XCTAssertNil(ISBNBarcodeValidator.isbn(from: "9780807083697X"))
     }
 
+    func testOpenLibraryRequestUsesIdentifyingUserAgent() throws {
+        let request = try OpenLibraryClient.makeRequest(
+            isbn: "9780807083697",
+            userAgent: "BookCatalog/0.0.1 (contact: test@example.com)"
+        )
+
+        XCTAssertEqual(request.url?.host, "openlibrary.org")
+        XCTAssertEqual(request.value(forHTTPHeaderField: "User-Agent"), "BookCatalog/0.0.1 (contact: test@example.com)")
+    }
+
     @MainActor
     func testRejectsDuplicateNonEmptyISBNs() throws {
         let container = try PersistenceController.makeModelContainer(isStoredInMemoryOnly: true)

@@ -19,6 +19,7 @@
 		C8E21734B7175CF6B196FEF2 /* BarcodeScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8736D50173B43D705CC9B7A7 /* BarcodeScannerView.swift */; };
 		D2E96662670536710A258182 /* PersistenceControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D3DA87EDB5FE10FB58DBD68 /* PersistenceControllerTests.swift */; };
 		E86DB8E49D310845FC57CC21 /* BookRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AD16ECEE36458637D08D23 /* BookRepository.swift */; };
+		EE8FAB194C6D7B8BEA60CF45 /* OpenLibraryClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34521CA030B0E0FADAEDDB0D /* OpenLibraryClient.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -33,6 +34,7 @@
 
 /* Begin PBXFileReference section */
 		0D9796E1D479121D581B6B04 /* ManualBookDraft.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManualBookDraft.swift; sourceTree = "<group>"; };
+		34521CA030B0E0FADAEDDB0D /* OpenLibraryClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenLibraryClient.swift; sourceTree = "<group>"; };
 		398BD0628164484FDD23DA83 /* BookCatalog.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = BookCatalog.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4A8DFEC67B2675C5B333366F /* Book.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Book.swift; sourceTree = "<group>"; };
 		59B1A56B2C570397AE858FF0 /* BookCatalogApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookCatalogApp.swift; sourceTree = "<group>"; };
@@ -78,6 +80,7 @@
 				B53D0ECD92FC1C105C18CA94 /* ISBNBarcodeValidator.swift */,
 				0D9796E1D479121D581B6B04 /* ManualBookDraft.swift */,
 				5E624C2F49D61D583F54F868 /* ManualBookForm.swift */,
+				34521CA030B0E0FADAEDDB0D /* OpenLibraryClient.swift */,
 				846616297C73F790A70B3C68 /* OpenLibraryConfiguration.swift */,
 				F1721EE9E3C52BD186B64DB2 /* PersistenceController.swift */,
 			);
@@ -184,6 +187,7 @@
 				83746FBD043F1B0CFED9040B /* ISBNBarcodeValidator.swift in Sources */,
 				9C9AB6DF8E314CA5A7827A2E /* ManualBookDraft.swift in Sources */,
 				7FC29CDF783183549DAC500A /* ManualBookForm.swift in Sources */,
+				EE8FAB194C6D7B8BEA60CF45 /* OpenLibraryClient.swift in Sources */,
 				5502408E3C97C9DC4938D36B /* OpenLibraryConfiguration.swift in Sources */,
 				B02C5B9C8B7A5344CB2D91F8 /* PersistenceController.swift in Sources */,
 			);
