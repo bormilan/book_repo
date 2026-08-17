@@ -7,6 +7,8 @@ struct ContentView: View {
     @State private var showsManualEntry = false
     @State private var showsScanner = false
     @State private var selectedBook: Book?
+    @State private var manualEntryISBN: String?
+    @State private var isLookingUpISBN = false
 
     var body: some View {
         NavigationStack {
@@ -30,6 +32,13 @@ struct ContentView: View {
                 }
             }
             .navigationTitle("My Books")
+            .overlay {
+                if isLookingUpISBN {
+                    ProgressView("Looking up book…")
+                        .padding()
+                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button("Scan book", systemImage: "barcode.viewfinder") {
@@ -44,13 +53,13 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showsManualEntry) {
                 NavigationStack {
-                    ManualBookForm()
+                    ManualBookForm(prefilledISBN: manualEntryISBN)
                 }
             }
             .sheet(isPresented: $showsScanner) {
                 NavigationStack {
                     BarcodeScannerView { isbn in
-                        openScannedISBN(isbn)
+                        handleScannedISBN(isbn)
                     }
                 }
             }
@@ -74,15 +83,41 @@ struct ContentView: View {
         }
     }
 
-    private func openScannedISBN(_ isbn: String) {
+    private func handleScannedISBN(_ isbn: String) {
         let repository = BookRepository(modelContext: modelContext)
         showsScanner = false
 
         if let existingBook = try? repository.book(withISBN: isbn) {
             selectedBook = existingBook
         } else {
-            showsManualEntry = true
+            isLookingUpISBN = true
+            Task {
+                defer { isLookingUpISBN = false }
+                do {
+                    guard let metadata = try await OpenLibraryClient().lookup(isbn: isbn) else {
+                        openManualEntry(with: isbn)
+                        return
+                    }
+
+                    _ = try repository.create(
+                        title: metadata.title,
+                        authors: metadata.authors,
+                        isbn: metadata.isbn,
+                        publisher: metadata.publisher,
+                        publicationDate: metadata.publicationDate,
+                        language: metadata.language,
+                        descriptionText: metadata.descriptionText
+                    )
+                } catch {
+                    openManualEntry(with: isbn)
+                }
+            }
         }
+    }
+
+    private func openManualEntry(with isbn: String) {
+        manualEntryISBN = isbn
+        showsManualEntry = true
     }
 }
 
