@@ -21,6 +21,11 @@ struct ManualBookForm: View {
                 TextField("Author(s)", text: $draft.authors)
                 TextField("ISBN", text: $draft.isbn)
                     .keyboardType(.numberPad)
+                if let message = draft.isbnValidationMessage {
+                    Text(message)
+                        .font(.footnote)
+                        .foregroundStyle(.red)
+                }
                 TextField("Publisher", text: $draft.publisher)
                 Toggle("Add publication date", isOn: $draft.includesPublicationDate)
                 if draft.includesPublicationDate {
