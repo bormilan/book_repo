@@ -4,6 +4,7 @@ import SwiftData
 struct ContentView: View {
     @Query(sort: \Book.title, order: .forward) private var books: [Book]
     @State private var unavailableFeature: UnavailableFeature?
+    @State private var showsManualEntry = false
 
     var body: some View {
         NavigationStack {
@@ -33,6 +34,11 @@ struct ContentView: View {
                         unavailableFeature = .scanner
                     }
                 }
+                ToolbarItem(placement: .secondaryAction) {
+                    Button("Add manually", systemImage: "plus") {
+                        showsManualEntry = true
+                    }
+                }
             }
             .alert(item: $unavailableFeature) { feature in
                 Alert(
@@ -40,6 +46,11 @@ struct ContentView: View {
                     message: Text(feature.message),
                     dismissButton: .default(Text("OK"))
                 )
+            }
+            .sheet(isPresented: $showsManualEntry) {
+                NavigationStack {
+                    ManualBookForm()
+                }
             }
         }
     }
@@ -52,7 +63,7 @@ struct ContentView: View {
             .buttonStyle(.borderedProminent)
 
             Button("Add manually") {
-                unavailableFeature = .manualEntry
+                showsManualEntry = true
             }
             .buttonStyle(.bordered)
         }
@@ -77,7 +88,6 @@ private struct BookRow: View {
 
 private enum UnavailableFeature: String, Identifiable {
     case scanner
-    case manualEntry
 
     var id: String { rawValue }
 
@@ -85,8 +95,6 @@ private enum UnavailableFeature: String, Identifiable {
         switch self {
         case .scanner:
             "Barcode scanning will be available in a later step."
-        case .manualEntry:
-            "Manual entry will be available in a later step."
         }
     }
 }
