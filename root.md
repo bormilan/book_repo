@@ -19,6 +19,10 @@ A mobile application that stores the books on the device.
   delivery plan and completion criteria.
 - [[specifications/implementation-tasks/0.0.1|Implementation tasks (v0.0.1)]]:
   ordered development checklist.
+- [[specifications/milestones/0.0.3|Milestones and deliverables (v0.0.3)]]:
+  metadata lookup reliability and coverage plan.
+- [[specifications/implementation-tasks/0.0.3|Implementation tasks (v0.0.3)]]:
+  ordered checklist for lookup feedback and provider fallback.
 # Tech stack
 - Swift and SwiftUI for the iPhone application
 - SwiftData for on-device data storage
