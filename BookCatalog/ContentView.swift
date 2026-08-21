@@ -63,9 +63,19 @@ struct ContentView: View {
                     }
                 }
             }
-            .safeAreaInset(edge: .bottom) {
-                if importFeedback.importedBook != nil {
-                    importConfirmation
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                VStack(spacing: 0) {
+                    if importFeedback.importedBook != nil {
+                        importConfirmation
+                    }
+
+                    Text(AppVersion.currentDisplayText)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
+                        .background(.bar)
+                        .accessibilityLabel("App \(AppVersion.currentDisplayText)")
                 }
             }
             .task(id: importFeedback.importedBook?.persistentModelID) {
@@ -140,6 +150,25 @@ struct ContentView: View {
     private func openManualEntry(with isbn: String) {
         manualEntryISBN = isbn
         showsManualEntry = true
+    }
+}
+
+enum AppVersion {
+    static var currentDisplayText: String {
+        displayText(infoDictionary: Bundle.main.infoDictionary ?? [:])
+    }
+
+    static func displayText(infoDictionary: [String: Any]) -> String {
+        guard
+            let version = infoDictionary["CFBundleShortVersionString"] as? String,
+            !version.isEmpty,
+            let build = infoDictionary["CFBundleVersion"] as? String,
+            !build.isEmpty
+        else {
+            return "Version unavailable"
+        }
+
+        return "Version \(version) (\(build))"
     }
 }
 

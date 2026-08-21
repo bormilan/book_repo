@@ -3,6 +3,21 @@ import XCTest
 @testable import BookCatalog
 
 final class PersistenceControllerTests: XCTestCase {
+    func testFormatsAppVersionAndBuildFromBundleValues() {
+        let version = AppVersion.displayText(
+            infoDictionary: [
+                "CFBundleShortVersionString": "0.0.2",
+                "CFBundleVersion": "11"
+            ]
+        )
+
+        XCTAssertEqual(version, "Version 0.0.2 (11)")
+    }
+
+    func testAppVersionFallsBackWhenBundleValuesAreUnavailable() {
+        XCTAssertEqual(AppVersion.displayText(infoDictionary: [:]), "Version unavailable")
+    }
+
     @MainActor
     func testCreatesAnInMemoryModelContainer() throws {
         let container = try PersistenceController.makeModelContainer(isStoredInMemoryOnly: true)
